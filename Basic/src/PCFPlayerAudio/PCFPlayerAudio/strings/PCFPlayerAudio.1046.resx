@@ -5,8 +5,20 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="PlayerLabel" xml:space="preserve"><value>Reprodutor de áudio</value></data>
+  <data name="ControlName" xml:space="preserve"><value>Reprodutor de áudio</value></data>
+  <data name="ControlDescription" xml:space="preserve"><value>Reproduz um áudio a partir da URL salva em um campo de texto.</value></data>
+  <data name="UrlAudioName" xml:space="preserve"><value>URL do áudio</value></data>
+  <data name="UrlAudioDescription" xml:space="preserve"><value>URL absoluta HTTP ou HTTPS do arquivo de áudio.</value></data>
   <data name="PlaybackError" xml:space="preserve"><value>Não foi possível reproduzir o áudio. Verifique o acesso e o formato do arquivo.</value></data>
   <data name="ReadDenied" xml:space="preserve"><value>Você não tem permissão para ler este campo.</value></data>
   <data name="InvalidUrl" xml:space="preserve"><value>Informe uma URL absoluta HTTP ou HTTPS sem credenciais incorporadas.</value></data>
   <data name="EmptyUrl" xml:space="preserve"><value>Nenhuma URL de áudio informada.</value></data>
+  <data name="AllowDownloadName" xml:space="preserve"><value>Permitir download do áudio</value></data>
+  <data name="AllowDownloadDescription" xml:space="preserve"><value>Exibe uma ação para o usuário baixar o arquivo de áudio.</value></data>
+  <data name="PlayLabel" xml:space="preserve"><value>Reproduzir</value></data>
+  <data name="PauseLabel" xml:space="preserve"><value>Pausar</value></data>
+  <data name="MuteLabel" xml:space="preserve"><value>Silenciar</value></data>
+  <data name="UnmuteLabel" xml:space="preserve"><value>Ativar som</value></data>
+  <data name="ProgressLabel" xml:space="preserve"><value>Progresso do áudio</value></data>
+  <data name="DownloadLabel" xml:space="preserve"><value>Baixar</value></data>
 </root>

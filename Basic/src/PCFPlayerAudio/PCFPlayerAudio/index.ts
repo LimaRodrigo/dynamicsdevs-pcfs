@@ -1,11 +1,16 @@
-﻿import type { IInputs, IOutputs } from "./generated/ManifestTypes";
+import { createAudioPlayerLabels } from "./application/AudioPlayerLabels";
+import type { AudioPlayerViewFactory, AudioPlayerViewPort } from "./application/AudioPlayerViewPort";
+import { type AudioUrlResolver, HttpAudioUrlResolver } from "./domain/AudioUrlResolver";
+import type { IInputs, IOutputs } from "./generated/ManifestTypes";
+import { AudioPlayerView } from "./presentation/AudioPlayerView";
 
 export class PCFPlayerAudio implements ComponentFramework.StandardControl<IInputs, IOutputs> {
-    private _container?: HTMLDivElement;
-    private _audioElement?: HTMLAudioElement;
-    private _statusElement?: HTMLDivElement;
-    private _currentUrl: string | undefined;
-    private _errorMessage = "";
+    private view?: AudioPlayerViewPort;
+
+    public constructor(
+        private readonly urlResolver: AudioUrlResolver = new HttpAudioUrlResolver(),
+        private readonly viewFactory: AudioPlayerViewFactory = (host) => new AudioPlayerView(host)
+    ) {}
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -13,50 +18,33 @@ export class PCFPlayerAudio implements ComponentFramework.StandardControl<IInput
         _state: ComponentFramework.Dictionary,
         container: HTMLDivElement
     ): void {
-        this._container = document.createElement("div");
-        this._container.className = "pcf-player-container";
-        this._audioElement = document.createElement("audio");
-        this._audioElement.className = "pcf-player-audio";
-        this._audioElement.controls = true;
-        this._audioElement.preload = "metadata";
-        this._audioElement.addEventListener("error", this.onAudioError);
-        this._audioElement.addEventListener("loadedmetadata", this.onAudioReady);
-        this._statusElement = document.createElement("div");
-        this._statusElement.className = "pcf-player-status";
-        this._statusElement.setAttribute("role", "status");
-        this._container.append(this._audioElement, this._statusElement);
-        container.appendChild(this._container);
+        this.view = this.viewFactory(container);
         this.updateView(context);
     }
 
     public updateView(context: ComponentFramework.Context<IInputs>): void {
-        const audio = this._audioElement;
-        if (!audio) return;
-        this._errorMessage = context.resources.getString("PlaybackError");
-        audio.setAttribute("aria-label", context.resources.getString("PlayerLabel"));
+        if (!this.view) return;
+
+        const labels = createAudioPlayerLabels(context.resources);
+        this.view.setLabels(labels);
+
         const field = context.parameters.UrlAudio;
         if (field.security?.readable === false) {
-            this.clearSource();
-            audio.hidden = true;
-            this.showStatus(context.resources.getString("ReadDenied"));
+            this.view.showUnavailable(labels.readDenied);
             return;
         }
+
         const rawUrl = field.raw?.trim() ?? "";
-        const url = this.normalizeUrl(rawUrl);
+        const url = this.urlResolver.resolve(rawUrl);
         if (!url) {
-            this.clearSource();
-            audio.hidden = true;
-            this.showStatus(context.resources.getString(rawUrl ? "InvalidUrl" : "EmptyUrl"));
+            this.view.showUnavailable(rawUrl ? labels.invalidUrl : labels.emptyUrl);
             return;
         }
-        audio.hidden = false;
-        // Preserve playback across unrelated host updates.
-        if (url === this._currentUrl) return;
-        this.clearSource();
-        this.showStatus("");
-        this._currentUrl = url;
-        audio.src = url;
-        audio.load();
+
+        this.view.showSource({
+            url,
+            allowDownload: context.parameters.PermitirDownload.raw === true,
+        });
     }
 
     public getOutputs(): IOutputs {
@@ -64,50 +52,7 @@ export class PCFPlayerAudio implements ComponentFramework.StandardControl<IInput
     }
 
     public destroy(): void {
-        this._audioElement?.removeEventListener("error", this.onAudioError);
-        this._audioElement?.removeEventListener("loadedmetadata", this.onAudioReady);
-        this.clearSource();
-        this._container?.remove();
-        this._audioElement = undefined;
-        this._statusElement = undefined;
-        this._container = undefined;
-    }
-
-    private normalizeUrl(value: string): string | undefined {
-        try {
-            const url = new URL(value);
-            if ((url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password) {
-                return url.href;
-            }
-        } catch {
-        }
-        return undefined;
-    }
-
-    private readonly onAudioError = (): void => {
-        if (this._currentUrl && this._audioElement?.error) {
-            this.showStatus(this._errorMessage);
-        }
-    };
-
-    private readonly onAudioReady = (): void => {
-        if (this._currentUrl && !this._audioElement?.error) this.showStatus("");
-    };
-
-    private showStatus(message: string): void {
-        if (this._statusElement) {
-            this._statusElement.textContent = message;
-            this._statusElement.hidden = !message;
-        }
-    }
-
-    private clearSource(): void {
-        const audio = this._audioElement;
-        this._currentUrl = undefined;
-        if (audio?.hasAttribute("src")) {
-            audio.pause();
-            audio.removeAttribute("src");
-            audio.load();
-        }
+        this.view?.destroy();
+        this.view = undefined;
     }
 }

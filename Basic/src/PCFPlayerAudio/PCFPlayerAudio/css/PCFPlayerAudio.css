@@ -1,18 +1,163 @@
-﻿.pcf-player-container {
+.PCFCurso\.PCFPlayerAudio .pcf-player-container {
+  box-sizing: border-box;
+  container-type: inline-size;
+  width: 100%;
+  color: #242424;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-controls {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
   width: 100%;
-  min-height: 40px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7f7f9 100%);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
-.pcf-player-audio {
-  width: 100%;
-  min-height: 32px;
+.PCFCurso\.PCFPlayerAudio .pcf-player-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #5b2c83;
+  cursor: pointer;
+  transition: background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 
-.pcf-player-status {
+.PCFCurso\.PCFPlayerAudio .pcf-player-button:hover:not(:disabled) {
+  background: #472064;
+  box-shadow: 0 3px 8px rgb(91 44 131 / 28%);
+  transform: translateY(-1px);
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-button:focus-visible,
+.PCFCurso\.PCFPlayerAudio .pcf-player-download:focus-visible,
+.PCFCurso\.PCFPlayerAudio .pcf-player-progress:focus-visible {
+  outline: 2px solid #5b2c83;
+  outline-offset: 2px;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-button:disabled {
+  color: #8a8886;
+  background: #edebe9;
+  cursor: default;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-volume {
+  color: #424242;
+  background: transparent;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-volume:hover:not(:disabled) {
+  background: #ece5f2;
+  box-shadow: none;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-time {
+  flex: 0 0 auto;
+  min-width: 76px;
+  color: #616161;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-progress {
+  --pcf-player-progress: 0%;
+  flex: 1 1 auto;
+  min-width: 72px;
+  height: 4px;
+  margin: 0;
+  appearance: none;
+  border-radius: 999px;
+  background: linear-gradient(to right, #5b2c83 0%, #5b2c83 var(--pcf-player-progress), #d6d6d6 var(--pcf-player-progress), #d6d6d6 100%);
+  cursor: pointer;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-progress::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  appearance: none;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #5b2c83;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 24%);
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-progress::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #5b2c83;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 24%);
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-download {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: #5b2c83;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-download:hover {
+  background: #ece5f2;
+}
+
+.PCFCurso\.PCFPlayerAudio .pcf-player-status {
+  box-sizing: border-box;
   width: 100%;
+  padding: 6px 10px 0;
+  color: #a4262c;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 
+.PCFCurso\.PCFPlayerAudio [hidden] {
+  display: none;
+}
+
+@container (max-width: 420px) {
+  .PCFCurso\.PCFPlayerAudio .pcf-player-controls {
+    gap: 6px;
+    padding-inline: 8px;
+  }
+
+  .PCFCurso\.PCFPlayerAudio .pcf-player-time {
+    min-width: 66px;
+    font-size: 11px;
+  }
+
+  .PCFCurso\.PCFPlayerAudio .pcf-player-download {
+    width: 34px;
+    overflow: hidden;
+    color: transparent;
+  }
+
+  .PCFCurso\.PCFPlayerAudio .pcf-player-download::before {
+    color: #5b2c83;
+    content: "\2193";
+    font-size: 18px;
+  }
+}
