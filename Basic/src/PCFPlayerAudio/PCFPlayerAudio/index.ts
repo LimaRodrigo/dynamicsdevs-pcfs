@@ -1,89 +1,113 @@
-import { IInputs, IOutputs } from "./generated/ManifestTypes";
+﻿import type { IInputs, IOutputs } from "./generated/ManifestTypes";
 
 export class PCFPlayerAudio implements ComponentFramework.StandardControl<IInputs, IOutputs> {
+    private _container?: HTMLDivElement;
+    private _audioElement?: HTMLAudioElement;
+    private _statusElement?: HTMLDivElement;
+    private _currentUrl: string | undefined;
+    private _errorMessage = "";
 
-    private _container: HTMLDivElement;
-    private _AudioElement: HTMLAudioElement;
-    private _context: ComponentFramework.Context<IInputs>;
-    /**
-     * Empty constructor.
-     */
-    constructor() {
-        // Empty
-    }
-
-    /**
-     * Used to initialize the control instance. Controls can kick off remote server calls and other initialization actions here.
-     * Data-set values are not initialized here, use updateView.
-     * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to property names defined in the manifest, as well as utility functions.
-     * @param notifyOutputChanged A callback method to alert the framework that the control has new outputs ready to be retrieved asynchronously.
-     * @param state A piece of data that persists in one session for a single user. Can be set at any point in a controls life cycle by calling 'setControlState' in the Mode interface.
-     * @param container If a control is marked control-type='standard', it will receive an empty div element within which it can render its content.
-     */
     public init(
         context: ComponentFramework.Context<IInputs>,
-        notifyOutputChanged: () => void,
-        state: ComponentFramework.Dictionary,
+        _notifyOutputChanged: () => void,
+        _state: ComponentFramework.Dictionary,
         container: HTMLDivElement
     ): void {
-        this._context = context;
         this._container = document.createElement("div");
-        this._container.className = 'pcf-player-container';
-        this._AudioElement = document.createElement("audio");
-        this._AudioElement.controls = true;
-        this._AudioElement.preload = 'metadata';
-        const url = context.parameters.UrlAudio?.raw ?? "";
-        if (url) {
-            this._AudioElement.src = url;
-        }
-
-        this._AudioElement.className = 'pcf-player-audio';
-
-        this._container.appendChild(this._AudioElement);
+        this._container.className = "pcf-player-container";
+        this._audioElement = document.createElement("audio");
+        this._audioElement.className = "pcf-player-audio";
+        this._audioElement.controls = true;
+        this._audioElement.preload = "metadata";
+        this._audioElement.addEventListener("error", this.onAudioError);
+        this._audioElement.addEventListener("loadedmetadata", this.onAudioReady);
+        this._statusElement = document.createElement("div");
+        this._statusElement.className = "pcf-player-status";
+        this._statusElement.setAttribute("role", "status");
+        this._container.append(this._audioElement, this._statusElement);
         container.appendChild(this._container);
+        this.updateView(context);
     }
 
-
-    /**
-     * Called when any value in the property bag has changed. This includes field values, data-sets, global values such as container height and width, offline status, control metadata values such as label, visible, etc.
-     * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
-     */
     public updateView(context: ComponentFramework.Context<IInputs>): void {
-        const newUrl = context.parameters.UrlAudio?.raw ?? "";
-        if (this._AudioElement) {
-            if ((this._AudioElement.src || "") !== newUrl) {
-                this._AudioElement.src = newUrl;
-                if (newUrl) {
-                    try {
-                        this._AudioElement.load();
-                    } catch (e) { console.error(e); }
-                }
-            }
+        const audio = this._audioElement;
+        if (!audio) return;
+        this._errorMessage = context.resources.getString("PlaybackError");
+        audio.setAttribute("aria-label", context.resources.getString("PlayerLabel"));
+        const field = context.parameters.UrlAudio;
+        if (field.security?.readable === false) {
+            this.clearSource();
+            audio.hidden = true;
+            this.showStatus(context.resources.getString("ReadDenied"));
+            return;
         }
+        const rawUrl = field.raw?.trim() ?? "";
+        const url = this.normalizeUrl(rawUrl);
+        if (!url) {
+            this.clearSource();
+            audio.hidden = true;
+            this.showStatus(context.resources.getString(rawUrl ? "InvalidUrl" : "EmptyUrl"));
+            return;
+        }
+        audio.hidden = false;
+        // Preserve playback across unrelated host updates.
+        if (url === this._currentUrl) return;
+        this.clearSource();
+        this.showStatus("");
+        this._currentUrl = url;
+        audio.src = url;
+        audio.load();
     }
 
-    /**
-     * It is called by the framework prior to a control receiving new data.
-     * @returns an object based on nomenclature defined in manifest, expecting object[s] for property marked as "bound" or "output"
-     */
     public getOutputs(): IOutputs {
         return {};
     }
 
-    /**
-     * Called when the control is to be removed from the DOM tree. Controls should use this call for cleanup.
-     * i.e. cancelling any pending remote calls, removing listeners, etc.
-     */
     public destroy(): void {
-        if (this._AudioElement) {
-            try {
-                this._AudioElement.pause();
-                this._AudioElement.removeAttribute('src');
-                this._AudioElement.load();
-            } catch (e) { console.error(e); }
+        this._audioElement?.removeEventListener("error", this.onAudioError);
+        this._audioElement?.removeEventListener("loadedmetadata", this.onAudioReady);
+        this.clearSource();
+        this._container?.remove();
+        this._audioElement = undefined;
+        this._statusElement = undefined;
+        this._container = undefined;
+    }
+
+    private normalizeUrl(value: string): string | undefined {
+        try {
+            const url = new URL(value);
+            if ((url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password) {
+                return url.href;
+            }
+        } catch {
         }
-        if (this._container && this._container.parentElement) {
-            this._container.parentElement.removeChild(this._container);
+        return undefined;
+    }
+
+    private readonly onAudioError = (): void => {
+        if (this._currentUrl && this._audioElement?.error) {
+            this.showStatus(this._errorMessage);
+        }
+    };
+
+    private readonly onAudioReady = (): void => {
+        if (this._currentUrl && !this._audioElement?.error) this.showStatus("");
+    };
+
+    private showStatus(message: string): void {
+        if (this._statusElement) {
+            this._statusElement.textContent = message;
+            this._statusElement.hidden = !message;
+        }
+    }
+
+    private clearSource(): void {
+        const audio = this._audioElement;
+        this._currentUrl = undefined;
+        if (audio?.hasAttribute("src")) {
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
         }
     }
 }

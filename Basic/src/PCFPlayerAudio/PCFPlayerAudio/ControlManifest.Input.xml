@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <manifest>
   <control namespace="PCFCurso" constructor="PCFPlayerAudio" version="0.0.1" display-name-key="PCFPlayerAudio" description-key="PCFPlayerAudio description" control-type="standard" >
     <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.
@@ -33,6 +33,8 @@
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/PCFPlayerAudio.css" order="1" />
+      <resx path="strings/PCFPlayerAudio.1033.resx" version="1.0.0" />
+      <resx path="strings/PCFPlayerAudio.1046.resx" version="1.0.0" />
       <!-- UNCOMMENT TO ADD MORE RESOURCES
       <resx path="strings/PCFPlayerAudio.1033.resx" version="1.0.0" />
       -->
@@ -51,3 +53,4 @@
     -->
   </control>
 </manifest>
+

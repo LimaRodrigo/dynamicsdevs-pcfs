@@ -1,4 +1,4 @@
-import eslintjs from "@eslint/js";
+﻿import eslintjs from "@eslint/js";
 import microsoftPowerApps from "@microsoft/eslint-plugin-power-apps";
 import pluginPromise from "eslint-plugin-promise";
 import globals from "globals";
@@ -33,7 +33,8 @@ export default [
     },
 
     rules: {
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { args: "all", argsIgnorePattern: "^_" }],
     },
   },
 ];
+
